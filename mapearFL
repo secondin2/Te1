@@ -1,0 +1,35 @@
+# Lista de IPs ou nomes de servidores
+$servers = "192.168.1.10", "192.168.1.11", "192.168.1.12"  # Adicione os IPs ou nomes dos servidores
+
+# Caminho para o arquivo de log onde os resultados serão salvos
+$logFile = "C:\temp\file_servers_log.txt"
+
+# Verifica se o arquivo de log já existe; se sim, remove-o para começar novo
+if (Test-Path $logFile) {
+    Remove-Item $logFile
+}
+
+# Inicia o processo de verificação de compartilhamentos
+foreach ($server in $servers) {
+    Write-Host "Verificando compartilhamentos no servidor $server..."
+    
+    # Tenta executar o net view e captura o resultado, incluindo erros
+    $shares = net view \\$server 2>&1
+    
+    # Verifica se houve sucesso na execução
+    if ($shares -notmatch "Acesso negado" -and $shares) {
+        Write-Host "Compartilhamentos encontrados no servidor $server:" -ForegroundColor Green
+        Write-Host $shares
+        
+        # Salva os compartilhamentos no arquivo de log
+        Add-Content -Path $logFile -Value "Compartilhamentos no servidor $server:`n$shares`n"
+    } else {
+        Write-Host "Não foi possível acessar $server ou nenhum compartilhamento encontrado." -ForegroundColor Red
+        
+        # Salva o erro ou o resultado de não compartilhamento no arquivo de log
+        Add-Content -Path $logFile -Value "Nenhum compartilhamento encontrado ou acesso negado para $server.`n"
+    }
+}
+
+# Exibe uma mensagem ao concluir a verificação
+Write-Host "Verificação concluída. Os resultados foram salvos em $logFile"
